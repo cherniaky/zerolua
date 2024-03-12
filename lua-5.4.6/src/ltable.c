@@ -8,6 +8,7 @@
 #define LUA_CORE
 
 #include "lprefix.h"
+#include <stdio.h>
 
 
 /*
@@ -152,6 +153,8 @@ static Node *mainpositionTV (const Table *t, const TValue *key) {
   switch (ttypetag(key)) {
     case LUA_VNUMINT: {
       lua_Integer i = ivalue(key);
+      // i++;
+      // printf("accessing %lld \n", i);
       return hashint(t, i);
     }
     case LUA_VNUMFLT: {
@@ -316,6 +319,7 @@ static const TValue *getgeneric (Table *t, const TValue *key, int deadok) {
 ** the array part of a table, 0 otherwise.
 */
 static unsigned int arrayindex (lua_Integer k) {
+  // printf("array index %lld\n", k);
   if (l_castS2U(k) - 1u < MAXASIZE)  /* 'k' in [1, MAXASIZE]? */
     return cast_uint(k);  /* 'key' is an appropriate array index */
   else
@@ -333,9 +337,9 @@ static unsigned int findindex (lua_State *L, Table *t, TValue *key,
   unsigned int i;
   if (ttisnil(key)) return 0;  /* first iteration */
   i = ttisinteger(key) ? arrayindex(ivalue(key)) : 0;
-  if (i - 1u < asize)  /* is 'key' inside array part? */
+  if (i - 1u < asize) {  /* is 'key' inside array part? */
     return i;  /* yes; that's the index */
-  else {
+  } else {
     const TValue *n = getgeneric(t, key, 1);
     if (l_unlikely(isabstkey(n)))
       luaG_runerror(L, "invalid key to 'next'");  /* key not found */
@@ -412,6 +416,7 @@ static unsigned int computesizes (unsigned int nums[], unsigned int *pna) {
 
 static int countint (lua_Integer key, unsigned int *nums) {
   unsigned int k = arrayindex(key);
+  printf("counting %ud\n", k);
   if (k != 0) {  /* is 'key' an appropriate array index? */
     nums[luaO_ceillog2(k)]++;  /* count as such */
     return 1;
@@ -728,6 +733,7 @@ void luaH_newkey (lua_State *L, Table *t, const TValue *key, TValue *value) {
 ** changing the real size of the array).
 */
 const TValue *luaH_getint (Table *t, lua_Integer key) {
+  // printf("getting %lld\n", key);
   if (l_castS2U(key) - 1u < t->alimit)  /* 'key' in [1, t->alimit]? */
     return &t->array[key - 1];
   else if (!limitequalsasize(t) &&  /* key still may be in the array part? */
